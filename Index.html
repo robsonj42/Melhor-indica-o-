@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Melhor Indicação do Dia</title>
+  <style>
+    :root{--bg:#f3f5f7;--card:#fff;--text:#121826;--muted:#6b7280;--line:#e5e7eb;--green:#2e7d32;--orange:#ed6c02;--red:#c62828;--accent:#111827;--shadow:0 10px 30px rgba(15,23,42,.08)}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 180px);color:var(--text)}
+    .wrap{max-width:720px;margin:0 auto;padding:18px 16px 28px}.hero{padding:18px 2px 10px}h1{margin:0;font-size:1.8rem;line-height:1.15;letter-spacing:-.03em}.sub{margin:8px 0 0;color:var(--muted);font-size:.98rem}.pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pill{padding:8px 10px;border-radius:999px;background:#ffffffcc;border:1px solid #ffffff;font-size:.82rem;color:#334155;box-shadow:0 4px 18px rgba(15,23,42,.06)}
+    .card{background:var(--card);border:1px solid rgba(229,231,235,.9);border-radius:20px;padding:16px;box-shadow:var(--shadow);margin-top:14px;overflow:hidden;position:relative}.card::before{content:"";position:absolute;left:0;top:0;width:100%;height:4px;background:linear-gradient(90deg,#4f46e5,#22c55e,#f59e0b)}
+    .card-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 10px}.card-title h2{margin:0;font-size:1.02rem}.badge{font-size:.75rem;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:700;white-space:nowrap}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.btn{appearance:none;border:0;border-radius:12px;padding:12px 14px;font-weight:700;background:var(--accent);color:#fff;cursor:pointer}.btn.secondary{background:#fff;color:#111827;border:1px solid var(--line)}
+    .kv{display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0 0}.kv div{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fafafa}.k{color:#475569;font-size:.92rem}.v{font-weight:700;text-align:right}
+    .high{color:var(--green)}.medium{color:var(--orange)}.low{color:var(--red)}.muted{color:var(--muted)}.small{font-size:.88rem;line-height:1.45}.stack{display:grid;gap:12px}.split{display:grid;grid-template-columns:1fr;gap:12px}.loading{padding:18px 0;color:var(--muted)}.topline{height:4px;border-radius:999px;background:linear-gradient(90deg,#4f46e5,#22c55e,#f59e0b);margin:4px 0 14px}
+    @media(min-width:760px){.split{grid-template-columns:1fr 1fr}.hero{padding-top:8px}h1{font-size:2.15rem}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="topline"></div>
+      <h1>Melhor Indicação do Dia</h1>
+      <p class="sub">Atualização diária online ou modo offline automático</p>
+      <div class="pillrow">
+        <span class="pill">5 cards premium</span>
+        <span class="pill">Sem depender do JSON</span>
+        <span class="pill">Abre direto no celular</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h2>Fonte de dados</h2><span class="badge">Offline + Online</span></div>
+      <p class="small muted">Se o JSON online falhar, o app usa os dados internos automaticamente para não ficar em branco.</p>
+      <div class="controls">
+        <button class="btn" onclick="loadData()">Atualizar agora</button>
+        <button class="btn secondary" onclick="useOffline()">Forçar offline</button>
+      </div>
+      <div class="kv"><div><span class="k">Modo atual</span><span class="v" id="modeLabel">-</span></div><div><span class="k">Última atualização</span><span class="v" id="lastUpdate">-</span></div></div>
+    </div>
+    <div id="result" class="stack"><div class="loading">Carregando...</div></div>
+  </div>
+  <script>
+    const JSON_URL = './apostas.json';
+    const fallback = { jogosDoDia: [
+      {liga:"Premier League",casa:{nome:"Arsenal",over15:9,fezGol:9,sofreuGol:5,mediaGols:2.3,vitorias:8,mediaGols1Tempo:1.1,mediaCorners:5.8,mediaYellowCards:2.4,finalizacoes1T:5.6},fora:{nome:"Liverpool",over15:8,fezGol:9,sofreuGol:6,mediaGols:2.5,vitorias:7,mediaGols1Tempo:1.3,mediaCorners:5.6,mediaYellowCards:2.7,finalizacoes1T:6.2},confronto:{over15:4,total:5}},
+      {liga:"La Liga",casa:{nome:"Real Madrid",over15:8,fezGol:9,sofreuGol:4,mediaGols:2.4,vitorias:8,mediaGols1Tempo:1.2,mediaCorners:5.7,mediaYellowCards:2.2,finalizacoes1T:6.0},fora:{nome:"Barcelona",over15:8,fezGol:8,sofreuGol:5,mediaGols:2.1,vitorias:7,mediaGols1Tempo:1.0,mediaCorners:5.3,mediaYellowCards:2.5,finalizacoes1T:5.4},confronto:{over15:4,total:5}},
+      {liga:"Serie A",casa:{nome:"Inter",over15:7,fezGol:8,sofreuGol:5,mediaGols:2.0,vitorias:7,mediaGols1Tempo:1.0,mediaCorners:5.0,mediaYellowCards:2.8,finalizacoes1T:4.8},fora:{nome:"Milan",over15:7,fezGol:7,sofreuGol:6,mediaGols:1.9,vitorias:6,mediaGols1Tempo:0.9,mediaCorners:4.9,mediaYellowCards:2.9,finalizacoes1T:4.6},confronto:{over15:4,total:5}},
+      {liga:"Bundesliga",casa:{nome:"Bayern",over15:9,fezGol:10,sofreuGol:4,mediaGols:3.0,vitorias:9,mediaGols1Tempo:1.5,mediaCorners:6.0,mediaYellowCards:1.9,finalizacoes1T:7.1},fora:{nome:"Dortmund",over15:8,fezGol:8,sofreuGol:6,mediaGols:2.2,vitorias:7,mediaGols1Tempo:1.1,mediaCorners:5.2,mediaYellowCards:2.4,finalizacoes1T:6.4},confronto:{over15:4,total:5}},
+      {liga:"Brasileirão Série A",casa:{nome:"Flamengo",over15:8,fezGol:8,sofreuGol:5,mediaGols:2.2,vitorias:7,mediaGols1Tempo:1.0,mediaCorners:5.1,mediaYellowCards:2.7,finalizacoes1T:5.5},fora:{nome:"Palmeiras",over15:8,fezGol:8,sofreuGol:5,mediaGols:2.1,vitorias:7,mediaGols1Tempo:1.0,mediaCorners:5.0,mediaYellowCards:2.6,finalizacoes1T:5.3},confronto:{over15:4,total:5}}
+    ] };
+    let state = { mode:'offline', lastUpdate:null };
+    const nowStr = () => new Date().toLocaleString('pt-BR');
+    const setMode = m => document.getElementById('modeLabel').textContent = m;
+    const setLast = s => document.getElementById('lastUpdate').textContent = s || '-';
+    const scoreOver15 = j => { const c=j.casa,f=j.fora; let p=0; if(c.fezGol>=8&&c.sofreuGol>=5)p+=3; if(f.fezGol>=8&&f.sofreuGol>=5)p+=3; if(c.mediaGols>1.8&&f.mediaGols>1.8)p+=2; if(j.confronto.total>=5&&j.confronto.over15>=4)p+=2; return p; };
+    const score1T = j => { const t=j.casa.mediaGols1Tempo+j.fora.mediaGols1Tempo; return t>=2.2?4:t>=1.8?3:t>=1.4?2:0; };
+    const scoreCorners1T = j => { const t=(j.casa.mediaCorners||0)+(j.fora.mediaCorners||0); return t>=11?4:t>=9.5?3:t>=8.5?2:0; };
+    const scoreCards1T = j => { const t=j.casa.mediaYellowCards+j.fora.mediaYellowCards; return t>=5.5?4:t>=4.5?3:t>=3.5?2:0; };
+    const scoreShots1T = j => Math.round((j.casa.finalizacoes1T + j.fora.finalizacoes1T) / 2);
+    const markets = j => [
+      {mercado:'Melhor indicação do dia', chave:'principal', pts:scoreOver15(j)},
+      {mercado:'Finalização no primeiro tempo', chave:'shots1T', pts:scoreShots1T(j)},
+      {mercado:'Cartão no primeiro tempo', chave:'cards1T', pts:Math.round(scoreCards1T(j) * 1.1)},
+      {mercado:'Gol no primeiro tempo', chave:'goal1T', pts:score1T(j)},
+      {mercado:'Escanteio no primeiro tempo', chave:'corner1T', pts:scoreCorners1T(j)}
+    ];
+    function bestByKey(data, key){ let best=null; (data.jogosDoDia||[]).forEach(j=>{const s=markets(j).find(x=>x.chave===key); const cand={jogo:j, mercado:s.mercado, pts:s.pts}; if(!best||cand.pts>best.pts) best=cand;}); return best; }
+    function levelLabel(pts){ return pts>=8 ? 'Alta' : pts>=6 ? 'Média' : 'Baixa'; }
+    function levelClass(pts){ return pts>=8 ? 'high' : pts>=6 ? 'medium' : 'low'; }
+    function cardHtml(title, pick, badge){ return `<div class="card"><div class="card-title"><h2>${title}</h2><span class="badge">${badge}</span></div><div class="split"><div><p style="font-size:1.14rem;margin:10px 0 6px"><strong>${pick.jogo.casa.nome} × ${pick.jogo.fora.nome}</strong></p><p class="small muted">${pick.jogo.liga}</p><p style="margin:12px 0 0"><strong>Mercado</strong>: ${title}</p><p style="margin:10px 0 0" class="${levelClass(pick.pts)}"><strong>Confiança</strong>: ${levelLabel(pick.pts)} (${pick.pts} pontos)</p></div><div><div class="kv"><div><span class="k">Casa</span><span class="v">${pick.jogo.casa.nome}</span></div><div><span class="k">Fora</span><span class="v">${pick.jogo.fora.nome}</span></div><div><span class="k">Liga</span><span class="v">${pick.jogo.liga}</span></div></div></div></div></div>`; }
+    function render(data, mode){ const result=document.getElementById('result'); const principal=bestByKey(data,'principal'); const shots=bestByKey(data,'shots1T'); const cards=bestByKey(data,'cards1T'); const goals=bestByKey(data,'goal1T'); const corners=bestByKey(data,'corner1T'); result.innerHTML=[cardHtml('Melhor indicação do dia',principal,mode==='online'?'Online':'Offline'),cardHtml('Finalização no primeiro tempo',shots,'1º tempo'),cardHtml('Cartão no primeiro tempo',cards,'1º tempo'),cardHtml('Gol no primeiro tempo',goals,'1º tempo'),cardHtml('Escanteio no primeiro tempo',corners,'1º tempo')].join(''); setMode(mode); setLast(nowStr()); }
+    async function loadData(){ try{ const res=await fetch(JSON_URL + '?t=' + Date.now(),{cache:'no-store'}); if(!res.ok) throw new Error('fail'); const data=await res.json(); render(data,'online'); } catch(e){ render(fallback,'offline'); } }
+    function useOffline(){ render(fallback,'offline'); }
+    loadData();
+    setInterval(loadData, 24*60*60*1000);
+  </script>
+</body>
+</html>
